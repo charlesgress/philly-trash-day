@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Philly Trash Day</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f0f2f5;
+      --surface:     #ffffff;
+      --surface2:    #f7f8fa;
+      --border:      #e2e5ea;
+      --blue:        #3b6fd4;
+      --blue-light:  #eef2fb;
+      --blue-mid:    #c5d4f5;
+      --text:        #1a2035;
+      --text-2:      #4a5568;
+      --text-3:      #8a94a6;
+      --green:       #2d7a5f;
+      --green-bg:    #edf7f3;
+      --green-border:#b2ddd0;
+      --amber:       #92600a;
+      --amber-bg:    #fef8ec;
+      --amber-border:#f2d88a;
+      --radius:      10px;
+      --shadow:      0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .page { max-width: 980px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .header { margin-bottom: 1.25rem; }
+    .header-eyebrow {
+      font-size: .7rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: .4rem;
+    }
+    .header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 400; color: var(--text); line-height: 1.15;
+    }
+    .header p { margin-top: .4rem; font-size: .875rem; color: var(--text-2); }
+
+    /* ── On-schedule banner ── */
+    .schedule-banner {
+      display: flex; align-items: center; gap: .6rem;
+      background: var(--green-bg); border: 1px solid var(--green-border);
+      border-radius: var(--radius); padding: .6rem 1rem;
+      font-size: .82rem; color: var(--green); font-weight: 500;
+      margin-bottom: 1.25rem;
+    }
+    .schedule-banner .icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .card-body { padding: 1.25rem; }
+    .card-header {
+      padding: .75rem 1.25rem; background: var(--surface2);
+      border-bottom: 1px solid var(--border); font-size: .7rem;
+      font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+    }
+
+    /* ── Button ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: .6rem;
+      width: 100%; padding: .85rem 1.25rem; background: var(--blue); color: #fff;
+      border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+      font-size: .88rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 2px 8px rgba(59,111,212,.3);
+    }
+    .btn:hover  { background: #2f5db8; box-shadow: 0 4px 12px rgba(59,111,212,.35); }
+    .btn:active { transform: scale(.99); }
+    .btn:disabled { background: #c5ccd8; box-shadow: none; cursor: not-allowed; }
+
+    /* ── Status ── */
+    #status {
+      margin-top: .85rem; font-size: .8rem; color: var(--text-3);
+      min-height: 1.2rem; line-height: 1.5;
+    }
+    #status.ok  { color: var(--green); }
+    #status.err { color: #c0392b; }
+
+    /* ── Result ── */
+    #result { display: none; margin-top: 1.1rem; animation: fadeUp .3s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+
+    .result-day-row {
+      display: flex; align-items: flex-end; gap: 1rem;
+      padding: 1.1rem 1.25rem; background: var(--blue-light);
+      border-bottom: 1px solid var(--blue-mid);
+    }
+    .result-day-label {
+      font-size: .65rem; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: .15rem;
+    }
+    .result-day-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem; color: var(--blue); line-height: 1;
+    }
+    .result-date-sub {
+      font-size: .95rem; color: var(--text); font-weight: 600; padding-bottom: .2rem;
+    }
+    .result-date-label {
+      font-size: .7rem; color: var(--text-3); font-weight: 400;
+      display: block; margin-bottom: .1rem;
+    }
+
+    .meta-list { padding: .75rem 1.25rem; }
+    .meta-item {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: .5rem 0; border-bottom: 1px solid var(--border);
+      font-size: .82rem; gap: 1rem;
+    }
+    .meta-item:last-child { border-bottom: none; }
+    .meta-lbl { color: var(--text-3); font-size: .78rem; white-space: nowrap; }
+    .meta-val { color: var(--text); font-weight: 500; text-align: right; }
+    .meta-sub { font-size: .7rem; color: var(--text-3); font-weight: 400; }
+
+    /* ── Alert banners ── */
+    .alert {
+      display: none; margin: 0 1.25rem .85rem;
+      padding: .75rem 1rem; border-radius: 8px;
+      font-size: .8rem; line-height: 1.55;
+    }
+    .alert-holiday { background: var(--blue-light); border: 1px solid var(--blue-mid); color: #2a4fa0; }
+    .alert-warning { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber); }
+    .alert-outside {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-2); margin: 1rem 0 0; border-radius: 8px;
+      padding: 1rem 1.25rem; font-size: .85rem; line-height: 1.6; display: none;
+    }
+    .alert strong { font-weight: 600; }
+
+    /* ── Sidebar ── */
+    .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .info-card .card-body { padding: 1rem 1.25rem; }
+    .info-q { font-size: .83rem; font-weight: 600; color: var(--text); margin-bottom: .4rem; line-height: 1.35; }
+    .info-a { font-size: .78rem; color: var(--text-2); line-height: 1.6; }
+
+    /* Collapsible section toggle (used for sidebar cards on mobile) */
+    .collapsible-trigger {
+      display: none; /* shown only on mobile via media query */
+      width: 100%; background: none; border: none; padding: .75rem 1.25rem;
+      font-family: 'DM Sans', sans-serif; font-size: .7rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+      text-align: left; cursor: pointer;
+      align-items: center; justify-content: space-between;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+    }
+    .collapsible-trigger .arrow { transition: transform .2s; display: inline-block; font-size: .7rem; }
+    .collapsible-trigger.open .arrow { transform: rotate(90deg); }
+    .collapsible-body { display: block; } /* always visible on desktop */
+
+    /* Holiday list toggle */
+    .holiday-toggle {
+      display: flex; align-items: center; gap: .4rem;
+      background: none; border: none; font-family: 'DM Sans', sans-serif;
+      font-size: .78rem; font-weight: 600; color: var(--blue);
+      cursor: pointer; padding: 0; margin-top: .75rem;
+    }
+    .holiday-toggle .arrow { transition: transform .2s; display: inline-block; }
+    .holiday-toggle.open .arrow { transform: rotate(90deg); }
+    .holiday-list { display: none; margin-top: .6rem; padding-top: .6rem; border-top: 1px solid var(--border); }
+    .holiday-list.open { display: block; }
+    .holiday-list li {
+      list-style: none; font-size: .76rem; color: var(--text-2);
+      padding: .3rem 0; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; gap: .5rem;
+    }
+    .holiday-list li:last-child { border-bottom: none; }
+    .holiday-list .hdate { color: var(--text-3); white-space: nowrap; }
+    .holiday-list .hweekend { color: var(--text-3); font-style: italic; font-size: .7rem; }
+
+    /* ── Mobile ── */
+    @media (max-width: 720px) {
+      body { padding: 1rem .85rem 2.5rem; }
+      .layout { grid-template-columns: 1fr; }
+
+      /* Show the toggle button, hide the body by default on mobile */
+      .collapsible-trigger { display: flex; }
+      .collapsible-body { display: none; }
+      .collapsible-body.open { display: block; }
+
+      /* Remove card-header since the trigger replaces it on mobile */
+      .info-card .card-header { display: none; }
+      .info-card .card-body { padding: 1rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <p class="header-eyebrow">City of Philadelphia</p>
+    <h1>Philly Trash Day</h1>
+    <p>One click to find your collection schedule.</p>
+  </div>
+
+  <div class="schedule-banner">
+    <span class="icon">✔</span>
+    Trash and recycling collections are on schedule.
+    <a href="https://www.phila.gov/services/trash-recycling-city-upkeep/find-your-trash-and-recycling-collection-day/" target="_blank" style="color:var(--green);font-size:.75rem;margin-left:auto;white-space:nowrap">Verify at phila.gov ↗</a>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── Main finder ── -->
+    <div>
+      <div class="card">
+        <div class="card-header">Your Collection Schedule</div>
+        <div class="card-body">
+          <button class="btn" id="btn" onclick="findTrashDay()">
+            <span>📍</span> Locate Me &amp; Find My Collection Day
+          </button>
+          <div id="status"></div>
+          <div class="alert-outside" id="alertOutside">
+            <strong>Looks like you're outside Philadelphia.</strong><br>
+            This tool only covers City of Philadelphia residential trash collection.
+            If you're elsewhere, check your local municipality's website for collection schedules.
+          </div>
+        </div>
+
+        <div id="result">
+          <div class="result-day-row">
+            <div>
+              <div class="result-day-label">Primary Collection Day</div>
+              <div class="result-day-name" id="rDay">—</div>
+            </div>
+            <div class="result-date-sub" id="rDate"></div>
+          </div>
+
+          <div class="alert alert-holiday" id="alertHoliday"></div>
+          <div class="alert alert-warning" id="alertWarning"></div>
+
+          <div class="meta-list">
+            <div class="meta-item">
+              <span class="meta-lbl">Detected Location</span>
+              <span class="meta-val" id="rStreet">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Next Recycling Day</span>
+              <span class="meta-val" id="rRecycling">—</span>
+            </div>
+            <div class="meta-item">
+              <div>
+                <div class="meta-lbl">Next Secondary Trash Day</div>
+                <div class="meta-sub" id="rSecondaryNote" style="display:none">Trash only — not recycling</div>
+              </div>
+              <span class="meta-val" id="rSecondary">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Sidebar ── -->
+    <div class="sidebar">
+
+      <div class="card info-card">
+        <!-- Desktop header -->
+        <div class="card-header">Common Questions</div>
+        <!-- Mobile collapsible trigger -->
+        <button class="collapsible-trigger" id="faqTrigger" onclick="toggleCollapsible('faqBody','faqTrigger')">
+          Common Questions <span class="arrow">▶</span>
+        </button>
+        <div class="collapsible-body" id="faqBody">
+          <div class="card-body">
+            <p class="info-q">Why is my collection day showing later than usual?</p>
+            <p class="info-a">When a City-observed holiday falls on or before your normal collection day, the rest of that week shifts by one day. If the holiday is on a Friday, Friday pickups move to Saturday.</p>
+            <p class="info-q" style="margin-top:1rem">I have trash collected twice a week — does that change?</p>
+            <p class="info-a">Yes. During a holiday week, twice-weekly areas receive only one pickup, on the same day as recycling. The secondary trash day won't run that week.</p>
+            <button class="holiday-toggle" id="toggleBtn" onclick="toggleHolidays()">
+              <span class="arrow">▶</span> 2026 City-observed holidays
+            </button>
+            <ul class="holiday-list" id="holidayList">
+              <li><span>New Year's Day</span>                      <span class="hdate">Jan 1</span></li>
+              <li><span>Martin Luther King, Jr. Day</span>         <span class="hdate">Jan 19</span></li>
+              <li><span>Presidents' Day</span>                     <span class="hdate">Feb 16</span></li>
+              <li><span>Good Friday</span>                         <span class="hdate">Apr 3</span></li>
+              <li><span>Memorial Day</span>                        <span class="hdate">May 25</span></li>
+              <li><span>Juneteenth</span>                          <span class="hdate">Jun 19</span></li>
+              <li><span>Independence Day</span>                    <span class="hdate">Jul 4 <span class="hweekend">(Sat — no impact)</span></span></li>
+              <li><span>Labor Day</span>                           <span class="hdate">Sep 7</span></li>
+              <li><span>Columbus/Indigenous Peoples' Day</span>    <span class="hdate">Oct 12</span></li>
+              <li><span>Veterans Day</span>                        <span class="hdate">Nov 11</span></li>
+              <li><span>Thanksgiving</span>                        <span class="hdate">Nov 26</span></li>
+              <li><span>Thanksgiving Friday</span>                 <span class="hdate">Nov 27</span></li>
+              <li><span>Christmas Day</span>                       <span class="hdate">Dec 25</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <div class="card-header">Good to Know</div>
+        <button class="collapsible-trigger" id="gtkTrigger" onclick="toggleCollapsible('gtkBody','gtkTrigger')">
+          Good to Know <span class="arrow">▶</span>
+        </button>
+        <div class="collapsible-body" id="gtkBody">
+          <div class="card-body">
+            <p class="info-a">🗓 <strong>Weekend holidays</strong> (like July 4th this year) don't affect the following week's collection.</p>
+            <p class="info-a" style="margin-top:.75rem">⚠ <strong>Two holidays in one week</strong> may cause delays beyond one day. Check <a href="https://www.phila.gov" target="_blank" style="color:var(--blue)">phila.gov</a> for the official modified schedule.</p>
+            <p class="info-a" style="margin-top:.75rem">🚛 See where trucks have been today at <a href="https://streetsmartphl.phila.gov" target="_blank" style="color:var(--blue)">StreetSmartPHL</a>.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer style="max-width:980px;margin:2.5rem auto 0;padding-top:1.25rem;border-top:1px solid var(--border);font-size:.72rem;color:#8a94a6;line-height:1.7;">
+  <p>Collection data sourced from <a href="https://opendataphilly.org" target="_blank" style="color:var(--blue)">OpenDataPhilly</a> under the City of Philadelphia's open data license.</p>
+  <p style="margin-top:.35rem">This site is an independent tool and is not affiliated with, endorsed by, or operated by the City of Philadelphia. Schedule information is provided for convenience only and may not reflect last-minute changes. For official schedules, visit <a href="https://www.phila.gov/services/trash-recycling-city-upkeep/find-your-trash-and-recycling-collection-day/" target="_blank" style="color:var(--blue)">phila.gov</a>.</p>
+  <p style="margin-top:.35rem">Your location is used only to look up your collection zone and is never stored or shared.</p>
+</footer>
+
+<script>
+const HOLIDAYS = [
+  { date: "2026-01-01", name: "New Year's Day",                       weekend: false },
+  { date: "2026-01-19", name: "Martin Luther King, Jr. Day",          weekend: false },
+  { date: "2026-02-16", name: "Presidents' Day",                      weekend: false },
+  { date: "2026-04-03", name: "Good Friday",                          weekend: false, isFriday: true },
+  { date: "2026-05-25", name: "Memorial Day",                         weekend: false },
+  { date: "2026-06-19", name: "Juneteenth",                           weekend: false, isFriday: true },
+  { date: "2026-07-04", name: "Independence Day",                     weekend: true },
+  { date: "2026-09-07", name: "Labor Day",                            weekend: false },
+  { date: "2026-10-12", name: "Columbus Day/Indigenous Peoples' Day", weekend: false },
+  { date: "2026-11-11", name: "Veterans Day",                         weekend: false },
+  { date: "2026-11-26", name: "Thanksgiving",                         weekend: false },
+  { date: "2026-11-27", name: "Thanksgiving Friday",                  weekend: false, isFriday: true },
+  { date: "2026-12-25", name: "Christmas Day",                        weekend: false, isFriday: true },
+];
+
+const DAY_MAP   = { MON:"Monday",TUE:"Tuesday",WED:"Wednesday",THU:"Thursday",FRI:"Friday",SAT:"Saturday",SUN:"Sunday" };
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+function weekStart(date) {
+  const d = new Date(date), day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day)); d.setHours(0,0,0,0); return d;
+}
+function toKey(d) { return d.toISOString().slice(0,10); }
+function getNextDate(dayName) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const idx = DAY_NAMES.indexOf(dayName); if (idx === -1) return null;
+  const diff = (idx - today.getDay() + 7) % 7 || 7;
+  const d = new Date(today); d.setDate(today.getDate() + diff); return d;
+}
+function ordinal(n) {
+  const s = ["th","st","nd","rd"], v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+function fmtDate(d) {
+  const weekday = d.toLocaleDateString('en-US', { weekday:'long' });
+  const month   = d.toLocaleDateString('en-US', { month:'long' });
+  return `${weekday}, ${month} ${ordinal(d.getDate())}`;
+}
+
+function applyHolidayRules(collDate, secDayName, isTwiceWeekly) {
+  const ws = weekStart(collDate);
+  const active = HOLIDAYS.filter(h => {
+    if (h.weekend) return false;
+    const hd = new Date(h.date+"T00:00:00");
+    return toKey(weekStart(hd)) === toKey(ws) && hd <= collDate;
+  });
+  if (!active.length) return { adjustedDate: collDate };
+  if (active.length >= 2) {
+    const shifted = new Date(collDate); shifted.setDate(collDate.getDate()+1);
+    return { adjustedDate: shifted, holidayName: active.map(h=>h.name).join(" & "), rule:"two" };
+  }
+  const h = active[0];
+  if (isTwiceWeekly && secDayName) {
+    const rIdx = DAY_NAMES.indexOf(secDayName);
+    const daysFromMon = rIdx === 0 ? 6 : rIdx - 1;
+    const recycDay = new Date(ws); recycDay.setDate(ws.getDate() + daysFromMon);
+    return { adjustedDate: recycDay, holidayName: h.name, rule:"twice", note:`During holiday weeks, twice-weekly areas get one pickup only — on your recycling day (${secDayName}).` };
+  }
+  const shifted = new Date(collDate); shifted.setDate(collDate.getDate()+1);
+  const fridayNote = (collDate.getDay() === 5 || h.isFriday) ? "Since the holiday falls on a Friday, your collection moves to Saturday." : null;
+  return { adjustedDate: shifted, holidayName: h.name, rule:"standard", note: fridayNote };
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('status'); el.className = cls||''; el.innerHTML = msg;
+}
+function showAlert(id, html) {
+  const el = document.getElementById(id); el.innerHTML = html; el.style.display = 'block';
+}
+function hideAlerts() {
+  ['alertHoliday','alertWarning'].forEach(id => {
+    const el = document.getElementById(id); el.style.display='none'; el.innerHTML='';
+  });
+  document.getElementById('alertOutside').style.display = 'none';
+}
+
+function toggleHolidays() {
+  document.getElementById('holidayList').classList.toggle('open');
+  document.getElementById('toggleBtn').classList.toggle('open');
+}
+function toggleCollapsible(bodyId, triggerId) {
+  document.getElementById(bodyId).classList.toggle('open');
+  document.getElementById(triggerId).classList.toggle('open');
+}
+
+async function findTrashDay() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true; btn.innerHTML = '<span>⏳</span> Searching...';
+  document.getElementById('result').style.display = 'none';
+  hideAlerts();
+
+  setStatus('Getting your location…');
+  let lat, lon;
+  try {
+    const pos = await new Promise((res, rej) => {
+      navigator.geolocation.getCurrentPosition(res, rej, {
+        timeout: 15000,
+        maximumAge: 60000,
+        enableHighAccuracy: false
+      });
+    });
+    lat = pos.coords.latitude; lon = pos.coords.longitude;
+  } catch(e) {
+    const msg = e.code === 1
+      ? '⚠ Location access denied. Please allow location access in your browser and try again.'
+      : e.code === 3
+      ? '⚠ Location request timed out. Please try again.'
+      : '⚠ Could not get your location. Please try again.';
+    setStatus(msg, 'err');
+    btn.disabled=false; btn.innerHTML='<span>📍</span> Locate Me & Find My Collection Day'; return;
+  }
+
+  setStatus('Looking up your collection schedule…');
+
+  // Run reverse geocode and ArcGIS lookup in parallel
+  const [geoResult, arcResult] = await Promise.allSettled([
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {headers:{'Accept-Language':'en'}})
+      .then(r => r.json()),
+    fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Rubbish_Recyc_Coll_Bnd/FeatureServer/0/query?${new URLSearchParams({
+      geometry:`${lon},${lat}`, geometryType:'esriGeometryPoint',
+      inSR:'4326', spatialRel:'esriSpatialRelIntersects',
+      outFields:'collday,secondary_rubbish_day,sandis,disday',
+      returnGeometry:'false', f:'json'
+    })}`)
+      .then(r => r.json())
+  ]);
+
+  // Extract street name (non-fatal)
+  let streetName = 'Your location';
+  if (geoResult.status === 'fulfilled') {
+    const gd = geoResult.value;
+    streetName = [gd.address?.house_number, gd.address?.road].filter(Boolean).join(' ') || 'Your location';
+  }
+
+  // Extract ArcGIS result
+  let attrs;
+  if (arcResult.status !== 'fulfilled' || !arcResult.value.features?.length) {
+    if (arcResult.status === 'fulfilled' && !arcResult.value.features?.length) {
+      setStatus('');
+      document.getElementById('alertOutside').style.display = 'block';
+    } else {
+      setStatus('⚠ Could not fetch schedule. Please try again.','err');
+    }
+    btn.disabled=false; btn.innerHTML='<span>📍</span> Locate Me & Find My Collection Day'; return;
+  }
+  attrs = arcResult.value.features[0].attributes;
+
+  const collDay = DAY_MAP[attrs.collday] || attrs.collday;
+  const secCode = attrs.secondary_rubbish_day;
+  const secDay  = DAY_MAP[secCode] || secCode || null;
+  const isTwice = !!secDay;
+  const collDate = getNextDate(collDay);
+  const { adjustedDate, holidayName, rule, note } = applyHolidayRules(collDate, secDay, isTwice);
+
+  document.getElementById('rDay').textContent      = collDay;
+  document.getElementById('rStreet').textContent   = streetName;
+  document.getElementById('rRecycling').textContent = fmtDate(getNextDate(collDay));
+  document.getElementById('rSecondary').textContent = secDay ? fmtDate(getNextDate(secDay)) : '—';
+  document.getElementById('rDistrict').textContent  = attrs.sandis || '—';
+  if (secDay) document.getElementById('rSecondaryNote').style.display = 'block';
+
+  const dateEl = document.getElementById('rDate');
+  if (adjustedDate && holidayName) {
+    dateEl.innerHTML = `<span class="result-date-label">Next pickup (holiday-adjusted)</span><strong>${fmtDate(adjustedDate)}</strong>`;
+    if (rule === 'two') {
+      showAlert('alertWarning', `<strong>⚠ Two holidays this week (${holidayName}).</strong> Collection may be delayed more than one day. Check <a href="https://www.phila.gov" target="_blank" style="color:inherit;font-weight:600">phila.gov</a> for the official modified schedule.`);
+    } else {
+      let msg = `<strong>📅 Your collection day is shifted one day later</strong> due to the <strong>${holidayName}</strong> holiday.`;
+      if (note) msg += `<br><span style="opacity:.85">${note}</span>`;
+      showAlert('alertHoliday', msg);
+    }
+  } else {
+    dateEl.innerHTML = adjustedDate ? `<span class="result-date-label">Next pickup</span><strong>${fmtDate(adjustedDate)}</strong>` : '';
+  }
+
+  document.getElementById('result').style.display = 'block';
+  setStatus('✔ Schedule found for ' + streetName, 'ok');
+  btn.disabled=false; btn.innerHTML='<span>📍</span> Locate Me & Find My Collection Day';
+}
+</script>
+</body>
+</html>
